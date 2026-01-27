@@ -1,6 +1,7 @@
 import { Tool, CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
 import { AccountManager } from "../accounts.js";
 import { GmailClient } from "../gmail.js";
+import { authenticate } from "../auth.js";
 
 export const tools: Tool[] = [
   {
@@ -173,12 +174,16 @@ export async function handleToolCall(
       }
 
       case "authenticate": {
-        // TODO: Implement OAuth flow
+        const { alias, email } = args as { alias: string; email?: string };
+        const result = await authenticate(accountManager, alias, email);
+        gmailClient.clearClient(alias); // Clear cached client to force reload
         return {
           content: [
             {
               type: "text",
-              text: "Authentication flow not yet implemented. See issue #3.",
+              text: result.success
+                ? `✓ ${result.message}`
+                : `✗ ${result.message}`,
             },
           ],
         };
@@ -248,6 +253,81 @@ export async function handleToolCall(
         return {
           content: [
             { type: "text", text: JSON.stringify(response.data.labels, null, 2) },
+          ],
+        };
+      }
+
+      case "send_email": {
+        const { account, to, subject, body, cc, bcc } = args as {
+          account: string;
+          to: string[];
+          subject: string;
+          body: string;
+          cc?: string[];
+          bcc?: string[];
+        };
+        const client = await gmailClient.getClient(account);
+
+        // Build email
+        const messageParts = [
+          `To: ${to.join(", ")}`,
+          `Subject: ${subject}`,
+        ];
+        if (cc && cc.length > 0) {
+          messageParts.push(`Cc: ${cc.join(", ")}`);
+        }
+        if (bcc && bcc.length > 0) {
+          messageParts.push(`Bcc: ${bcc.join(", ")}`);
+        }
+        messageParts.push("Content-Type: text/plain; charset=utf-8");
+        messageParts.push("");
+        messageParts.push(body);
+
+        const rawMessage = Buffer.from(messageParts.join("\r\n"))
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+
+        const response = await client.users.messages.send({
+          userId: "me",
+          requestBody: { raw: rawMessage },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email sent successfully. Message ID: ${response.data.id}`,
+            },
+          ],
+        };
+      }
+
+      case "modify_email": {
+        const { account, messageId, addLabelIds, removeLabelIds } = args as {
+          account: string;
+          messageId: string;
+          addLabelIds?: string[];
+          removeLabelIds?: string[];
+        };
+        const client = await gmailClient.getClient(account);
+
+        await client.users.messages.modify({
+          userId: "me",
+          id: messageId,
+          requestBody: {
+            addLabelIds: addLabelIds || [],
+            removeLabelIds: removeLabelIds || [],
+          },
+        });
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Email ${messageId} modified successfully.`,
+            },
           ],
         };
       }
