@@ -29,3 +29,17 @@ coverage/
 # Environment
 .env
 .env.local
+
+# Claude Code session metadata (worktrees, transcripts)
+.claude/
+
+# Python virtual environments (not used here; guard against accidental commits)
+venv/
+.venv/
+*.venv/
+
+# Local backups of dist (e.g. created during deployment to Cowork)
+dist.bak*
+
+# Local config home (should never be inside the repo, but guard anyway)
+.gmail-mcp/

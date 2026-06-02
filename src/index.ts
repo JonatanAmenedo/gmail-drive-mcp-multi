@@ -9,6 +9,7 @@ import {
 
 import { AccountManager } from "./accounts.js";
 import { GmailClient } from "./gmail.js";
+import { DriveClient } from "./drive.js";
 import { tools, handleToolCall } from "./tools/index.js";
 
 const server = new Server(
@@ -25,13 +26,14 @@ const server = new Server(
 
 const accountManager = new AccountManager();
 const gmailClient = new GmailClient(accountManager);
+const driveClient = new DriveClient(accountManager);
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools,
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  return handleToolCall(request, accountManager, gmailClient);
+  return handleToolCall(request, accountManager, gmailClient, driveClient);
 });
 
 async function main() {
