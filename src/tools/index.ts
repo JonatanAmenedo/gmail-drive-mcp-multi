@@ -699,6 +699,16 @@ export async function handleToolCall(
           parentId?: string;
           mimeType?: string;
         };
+        if (!fs.existsSync(localPath)) {
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Error: local file not found: ${localPath}`,
+              },
+            ],
+          };
+        }
         const client = await driveClient.getClient(account);
         const fileName = uploadName || path.basename(localPath);
         const response = await client.files.create({
