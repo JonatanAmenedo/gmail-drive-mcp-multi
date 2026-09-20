@@ -4,9 +4,15 @@ import { GmailClient } from "./gmail.js";
 /**
  * Gmail settings tools: filters, forwarding addresses and label creation.
  *
- * These require the `gmail.settings.basic` OAuth scope. Accounts authenticated
- * before that scope was added must be re-authenticated with the `authenticate`
- * tool, otherwise Google returns a 403 insufficient-scope error.
+ * Most of these require the `gmail.settings.basic` OAuth scope. Creating a
+ * forwarding address is the exception: Google requires `gmail.settings.sharing`
+ * for forwardingAddresses.create, while listing them only needs basic — so
+ * list_forwarding_addresses can succeed on an account where
+ * create_forwarding_address returns 403.
+ *
+ * Accounts authenticated before a scope was added must be re-authenticated with
+ * the `authenticate` tool, otherwise Google returns a 403 insufficient-scope
+ * error.
  */
 
 const ACCOUNT_PROP = {
@@ -180,11 +186,19 @@ async function resolveLabelId(
   return { id: created.data.id, created: true };
 }
 
-function scopeHint(error: unknown): string {
+/** The scope Google actually enforces for each settings tool. */
+const TOOL_SCOPES: Record<string, string> = {
+  create_forwarding_address: "gmail.settings.sharing",
+};
+
+function scopeHint(error: unknown, toolName: string): string {
   const message = error instanceof Error ? error.message : String(error);
   if (/insufficient|scope|403/i.test(message)) {
-    return `${message}\n\nThis tool needs the gmail.settings.basic scope. ` +
-      `Re-run the authenticate tool for this account to grant it.`;
+    const scope = TOOL_SCOPES[toolName] ?? "gmail.settings.basic";
+    return `${message}\n\nThis tool needs the ${scope} scope. ` +
+      `Re-run the authenticate tool for this account to grant it. ` +
+      `If it still fails, add ${scope} to the OAuth consent screen in the ` +
+      `Google Cloud Console first — the consent screen only grants scopes it lists.`;
   }
   return message;
 }
@@ -338,6 +352,6 @@ export async function handleFilterTool(
         return text(`Unknown settings tool: ${name}`);
     }
   } catch (error) {
-    return text(`Error: ${scopeHint(error)}`);
+    return text(`Error: ${scopeHint(error, name)}`);
   }
 }

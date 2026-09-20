@@ -31,6 +31,8 @@ The built entry point is `dist/index.js`.
    - `https://www.googleapis.com/auth/gmail.compose`
    - `https://www.googleapis.com/auth/gmail.modify`
    - `https://www.googleapis.com/auth/gmail.labels`
+   - `https://www.googleapis.com/auth/gmail.settings.basic` *(read/write filters, labels, list forwarding addresses)*
+   - `https://www.googleapis.com/auth/gmail.settings.sharing` *(register forwarding addresses — Google enforces this one only on create)*
    - `https://www.googleapis.com/auth/drive` *(full read/write/delete on Drive)*
 5. **Credentials**: create an **OAuth client ID** of type **Desktop app** and download the JSON.
 6. Save that JSON as **`~/.gmail-mcp/oauth-keys.json`** (see [oauth-keys.example.json](./oauth-keys.example.json) for the expected shape). Do **not** commit it.
