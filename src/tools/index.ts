@@ -5,6 +5,7 @@ import { AccountManager } from "../accounts.js";
 import { GmailClient } from "../gmail.js";
 import { DriveClient } from "../drive.js";
 import { authenticate } from "../auth.js";
+import { filterTools, filterToolNames, handleFilterTool } from "../filters.js";
 
 export const tools: Tool[] = [
   {
@@ -390,6 +391,7 @@ export const tools: Tool[] = [
       required: ["account", "messageId"],
     },
   },
+  ...filterTools,
 ];
 
 export async function handleToolCall(
@@ -959,6 +961,13 @@ export async function handleToolCall(
       }
 
       default:
+        if (filterToolNames.has(name)) {
+          return handleFilterTool(
+            name,
+            args as Record<string, any>,
+            gmailClient
+          );
+        }
         return {
           content: [{ type: "text", text: `Unknown tool: ${name}` }],
         };
