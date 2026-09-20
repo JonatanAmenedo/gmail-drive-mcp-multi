@@ -98,6 +98,55 @@ Every tool takes an `account` parameter (an alias or full email).
 | `drive_rename` | `account`, `fileId`, `newName` | Rename a file |
 | `drive_delete` | `account`, `fileId`, `permanent?` | Trash (default) or permanently delete a file |
 | `drive_download` | `account`, `fileId`, `destPath`, `exportMimeType?` | Stream a file to disk; Google-native files are exported (Docs/Slides → PDF, Sheets → XLSX by default) |
+## Use as a Claude Code / Cowork plugin
+
+This repository is also a Claude Code plugin: it ships a plugin manifest, an `.mcp.json` that
+registers the server, and a skill that routes natural-language account references to the right
+alias. (It replaces the former separate `gmail-mcp-multi-cowork` wrapper repo.)
+
+```
+.claude-plugin/plugin.json       # plugin manifest
+.claude-plugin/marketplace.json  # lets this directory be added as a local marketplace
+.mcp.json                        # registers the server at ${CLAUDE_PLUGIN_ROOT}/dist/index.js
+skills/gmail-accounts/SKILL.md   # natural-language account routing
+```
+
+Build first (`npm install && npm run build`) — the plugin runs the compiled `dist/`, which is not
+committed.
+
+**Install it as a plugin:**
+
+```bash
+claude plugin marketplace add /absolute/path/to/gmail-drive-mcp-multi
+claude plugin install gmail-drive-mcp-multi@gmail-drive-mcp-multi-local
+```
+
+If you already registered the server manually (see [Configure your MCP client](#configure-your-mcp-client)),
+remove that entry first — otherwise the same tools are exposed twice.
+
+**Using the skill without installing the plugin:** symlink it into your user skills directory, which
+keeps a single source of truth:
+
+```bash
+ln -s /absolute/path/to/gmail-drive-mcp-multi/skills/gmail-accounts ~/.claude/skills/gmail-accounts
+```
+
+### Local account map
+
+The committed skill is generic: it discovers aliases with `list_accounts`. To give Claude your own
+alias → mailbox mapping, create `skills/gmail-accounts/accounts.local.md` with a table of aliases,
+addresses and context. The skill reads it when present, and `.gitignore` keeps it out of the
+repository — it contains real addresses.
+
+### Notes and limitations
+
+- **Local only.** The server is a Node stdio process on your machine. It won't work in remote
+  sessions or on another machine without `node` and a copy of `~/.gmail-mcp/`.
+- **OAuth Testing mode.** Refresh tokens for accounts outside the OAuth project's organization
+  expire every 7 days; re-run `authenticate` when that happens.
+- **`node_modules` is heavy.** `googleapis` pulls in definitions for every Google API (~136 MB), so
+  packaging the plugin with bundled dependencies produces a large archive.
+
 ## Storage layout
 ```
 ~/.gmail-mcp/

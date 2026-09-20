@@ -43,3 +43,6 @@ dist.bak*
 
 # Local config home (should never be inside the repo, but guard anyway)
 .gmail-mcp/
+
+# Local, machine-specific account map for the gmail-accounts skill (contains real addresses)
+skills/*/accounts.local.md

@@ -1,0 +1,15 @@
+{
+  "name": "gmail-drive-mcp-multi",
+  "version": "0.1.0",
+  "description": "Multi-account Gmail + Google Drive access. Runs the bundled MCP server and adds a skill that routes natural-language account references to the right alias.",
+  "author": {
+    "name": "Jonatan Amenedo"
+  },
+  "keywords": [
+    "gmail",
+    "google-drive",
+    "email",
+    "multi-account",
+    "mcp"
+  ]
+}

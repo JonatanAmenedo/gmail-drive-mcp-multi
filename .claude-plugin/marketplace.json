@@ -1,0 +1,13 @@
+{
+  "name": "gmail-drive-mcp-multi-local",
+  "owner": {
+    "name": "Jonatan Amenedo"
+  },
+  "plugins": [
+    {
+      "source": "./",
+      "name": "gmail-drive-mcp-multi",
+      "description": "Multi-account Gmail + Google Drive MCP server with natural-language account routing."
+    }
+  ]
+}
